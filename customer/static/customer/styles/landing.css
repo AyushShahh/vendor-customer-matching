@@ -1,0 +1,63 @@
+body {
+    background-image: url('/static/customer/assets/landing-background.jpg');
+    color: #ffffff;
+    font-family: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+
+#one, #two, #three {
+    font-size: 60px;
+    font-weight: bold;
+    margin-bottom: 0px !important;
+    opacity: 0;
+}
+
+#one {
+    animation: fade-in 3s forwards;
+}
+
+#two {
+    animation: fade-in 3s 0.5s forwards;
+}
+
+#three {
+    animation: fade-in 3s forwards 1s;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.cont {
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 40px 60px;
+}
+
+button {
+    border-radius: 15px;
+    padding: 10px 20px;
+    font-size: 20px;
+    background-color: #ffffff;
+    border: 0px;
+}
+
+button:hover {
+    background-color: #eeeeee;
+}
+
+.card {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.buttons {
+    margin-bottom: 30px;
+}
