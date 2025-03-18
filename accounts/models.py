@@ -25,6 +25,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    username = None
     USER_TYPE_CHOICES = (
         ('vendor', 'Vendor'),
         ('customer', 'Customer'),
