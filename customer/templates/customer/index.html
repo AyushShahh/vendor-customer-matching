@@ -1,124 +1,92 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <!-- Removed Bootstrap links for vendor-like design -->
     <title>Find products</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="{% static 'customer/styles/index.css' %}" rel="stylesheet">
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Left Sidebar -->
-            <nav class="col-md-2 sidebar py-4">
-                <!-- Sidebar header with welcome text and links -->
-                <div class="sidebar-header mb-3 text-center">
-                    <h5>Welcome, {{ request.user.first_name }}</h5>
-                    <form action="{% url 'accounts:logout' %}" method="post">
-                        {% csrf_token %}
-                        <input type="submit" class="btn btn-sm btn-outline-danger mt-2" value="Logout">
-                    </form>
-                    <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'accounts:profile' %}">View profile</a>
-                    
-                </div>
-                <ul class="nav flex-column">
-                    <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Categories</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Deals</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
-                </ul>
-            </nav>
-            <!-- Main Content -->
-            <main class="col-md-10 py-4">
-                <h1>Find Products</h1>
-                <br>
-                <!-- Top Search Bar -->
-                <div class="mb-4">
-                    <form class="d-flex" id="search-form">
-                        <input class="form-control me-2" type="search" placeholder="Search products..." aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
-                </div>
-                <!-- Filter/Sort Options -->
-                <div class="mb-4">
-                    <div class="row">
-                        <div class="col-md-2">
-                            <select class="form-select" id="filter-price">
-                                <option selected>Price</option>
-                                <option>Low to High</option>
-                                <option>High to Low</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-select" id="filter-rating">
-                                <option selected>Rating</option>
-                                <option>High to Low</option>
-                                <option>Low to High</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-select" id="filter-area">
-                                <option selected>Area</option>
-                                <option>Area 1</option>
-                                <option>Area 2</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="filter-shop">
-                                <option selected>Shop</option>
-                                <option>Shop A</option>
-                                <option>Shop B</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="filter-category">
-                                <option selected>Category</option>
-                                <option>Category X</option>
-                                <option>Category Y</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <!-- Product Listing Sections -->
-                <section class="mb-5">
-                    <h4 class="mb-3">Popular products in {{ request.user.area }}</h4>
-                    <div class="row row-cols-2 row-cols-md-4 g-3">
-                        <div class="col">
-                            <div class="card h-100 product-card">
-                                <img src="https://burst.shopifycdn.com/photos/photography-product-download.jpg?width=1000&format=pjpg&exif=0&iptc=0" class="card-img-top" alt="Product 1">
-                                <div class="card-body p-2">
-                                    <h6 class="card-title">Product 1</h6>
-                                    <p class="card-text small">$100 | Rating: 5<br>Shop: A</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ...additional product cards... -->
-                    </div>
-                </section>
-                <section class="mb-5">
-                    <h4 class="mb-3">Popular products in {{ request.user.city }}</h4>
-                    <div class="row row-cols-2 row-cols-md-4 g-3">
-                        <div class="col">
-                            <div class="card h-100 product-card">
-                                <img src="https://burst.shopifycdn.com/photos/photography-product-download.jpg?width=1000&format=pjpg&exif=0&iptc=0" class="card-img-top" alt="Product 2">
-                                <div class="card-body p-2">
-                                    <h6 class="card-title">Product 2</h6>
-                                    <p class="card-text small">$200 | Rating: 4<br>Shop: B</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ...additional product cards... -->
-                    </div>
-                </section>
-                </div>
-            </main>
+    <div class="sidebar">
+        <h2>MarketPlace</h2>
+        <!-- New customer profile section -->
+        <div class="customer-profile">
+            <p>Hello, {{ request.user.first_name }}</p>
+            <a href="{% url 'accounts:profile' %}" class="profile-link">View Profile</a>
         </div>
+        <ul>
+            <li><a href="#" class="active" onclick="showSection('overview')"><span>📊</span> Overview</a></li>
+            <li><a href="#" onclick="showSection('categories')"><span>📂</span> Categories</a></li>
+            <li><a href="#" onclick="showSection('deals')"><span>🔥</span> Deals</a></li>
+            <li><a href="#" onclick="showSection('contact')"><span>✉️</span> Contact</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div id="toast" class="toast"></div>
+        <!-- Top Search Bar -->
+        <div class="search-bar">
+            <form id="search-form">
+                <input type="search" placeholder="Search products..." aria-label="Search">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <!-- Filter/Sort Options -->
+        <div class="form-group">
+            <select id="filter-price">
+                <option selected>Price</option>
+                <option>Low to High</option>
+                <option>High to Low</option>
+            </select>
+            <select id="filter-rating">
+                <option selected>Rating</option>
+                <option>High to Low</option>
+                <option>Low to High</option>
+            </select>
+            <select id="filter-area">
+                <option selected>Area</option>
+                <option>Area 1</option>
+                <option>Area 2</option>
+            </select>
+            <select id="filter-shop">
+                <option selected>Shop</option>
+                <option>Shop A</option>
+                <option>Shop B</option>
+            </select>
+            <select id="filter-category">
+                <option selected>Category</option>
+                <option>Category X</option>
+                <option>Category Y</option>
+            </select>
+        </div>
+        <!-- Product Listing Sections -->
+        <section class="section">
+            <h2>Popular products in {{ request.user.area }}</h2>
+            <div class="product-list">
+                <div class="product-card">
+                    <img src="https://burst.shopifycdn.com/photos/photography-product-download.jpg?width=1000&format=pjpg&exif=0&iptc=0" alt="Product 1">
+                    <div class="product-info">
+                        <h3>Product 1</h3>
+                        <p>$100 | Rating: 5<br>Shop: A</p>
+                    </div>
+                </div>
+                <!-- ...additional product cards... -->
+            </div>
+        </section>
+        <section class="section">
+            <h2>Popular products in {{ request.user.city }}</h2>
+            <div class="product-list">
+                <div class="product-card">
+                    <img src="https://burst.shopifycdn.com/photos/photography-product-download.jpg?width=1000&format=pjpg&exif=0&iptc=0" alt="Product 2">
+                    <div class="product-info">
+                        <h3>Product 2</h3>
+                        <p>$200 | Rating: 4<br>Shop: B</p>
+                    </div>
+                </div>
+                <!-- ...additional product cards... -->
+            </div>
+        </section>
     </div>
     <!-- Include JavaScript file for functionality -->
     <script src="{% static 'customer/js/index.js' %}"></script>
