@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vendor Dashboard{% endblock %} - MarketPlace</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'vendor/styles/index.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar">
+        <h2>MarketPlace</h2>
+        
+        <!-- User Profile Section -->
+        <div class="user-profile-section">
+            <div class="greeting">
+                <h3>Hello, {{ request.user.get_full_name|default:request.user.email }}</h3>
+            </div>
+            <div class="profile-actions">
+                <a href="{% url 'accounts:profile' %}" class="profile-btn">View Profile</a>
+                <a href="{% url 'accounts:profile' %}?edit=true" class="profile-btn">Edit Profile</a>
+                <form action="{% url 'accounts:logout' %}" method="post">
+                    {% csrf_token %}
+                    <a class="logout-btn" style="cursor: pointer;"><button type="submit" style="all: unset">Logout</button></a>
+                </form>
+            </div>
+        </div>
+        
+        <ul>
+            <li><a href="{% url 'vendor:index' %}" class="{% if request.path == '/vendor/' %}active{% endif %}"><span>📊</span> Overview</a></li>
+            <li><a href="{% url 'vendor:business_list' %}" class="{% if '/businesses/' in request.path %}active{% endif %}"><span>🏪</span> Businesses</a></li>
+            <li><a href="{% url 'vendor:analytics' %}" class="{% if '/analytics/' in request.path %}active{% endif %}"><span>📈</span> Analytics</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="toast {% if message.tags %}{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

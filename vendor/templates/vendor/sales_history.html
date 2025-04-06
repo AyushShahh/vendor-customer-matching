@@ -1,0 +1,163 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}Sales History - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:business_list' %}">My Businesses</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:business_detail' business.id %}">{{ business.name }}</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item active">Sales History</div>
+</div>
+
+<h1>Sales History for {{ business.name }}</h1>
+
+<div class="section">
+    <div class="filter-controls">
+        <form method="get" class="filter-form">
+            <div class="analytics-filter">
+                <div class="form-group">
+                    <label for="period">Time Period:</label>
+                    <select name="period" id="period" onchange="this.form.submit()" class="form-control">
+                        <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+                        <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>This Quarter</option>
+                        <option value="year" {% if period == 'year' %}selected{% endif %}>This Year</option>
+                    </select>
+                </div>
+                <div class="date-range">
+                    <label>Custom Range:</label>
+                    <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                    <span>to</span>
+                    <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                    <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="overview">
+        <div class="stat-card">
+            <h3>Total Revenue</h3>
+            <p>₹{{ total_revenue }}</p>
+            <small>In selected period</small>
+        </div>
+        <div class="stat-card">
+            <h3>Total Profit</h3>
+            <p>₹{{ total_profit }}</p>
+            <small>In selected period</small>
+        </div>
+        <div class="stat-card">
+            <h3>Total Sales</h3>
+            <p>{{ sales.count|default:"0" }}</p>
+            <small>Number of transactions</small>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="salesChart" height="300"></canvas>
+    </div>
+    
+    {% if sales %}
+        <h2>Sales Transactions</h2>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.timestamp|date:"M d, Y H:i" }}</td>
+                            <td>{{ sale.product.name }}</td>
+                            <td>{{ sale.quantity }}</td>
+                            <td>₹{{ sale.selling_price }}</td>
+                            <td>{{ sale.quantity|floatformat:0|default:"0" }} × ₹{{ sale.selling_price }} = ₹{{ sale.get_total_price }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No sales found for the selected period.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="navigation-links">
+    <a href="{% url 'vendor:create_sale' business.id %}" class="btn btn-primary">Record New Sale</a>
+    <a href="{% url 'vendor:business_detail' business.id %}" class="btn btn-secondary">Back to Business</a>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sales data visualization
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        
+        // Sample data - replace with actual data from backend
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const salesData = [4500, 5200, 4800, 6300, 7400, 9200, 8100];
+        
+        new Chart(salesCtx, {
+            type: 'bar',
+            data: {
+                labels: days,
+                datasets: [{
+                    label: 'Daily Sales',
+                    data: salesData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Amount (₹)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Daily Sales Overview'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Sales: ₹' + context.parsed.y;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

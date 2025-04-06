@@ -38,7 +38,7 @@ class BusinessReview(models.Model):
 
 
 class BusinessCategory(models.Model):
-    name = models.CharField(max_length=20, null=False, blank=False)
+    name = models.CharField(max_length=40, null=False, blank=False)
 
     def __str__(self):
         return self.name

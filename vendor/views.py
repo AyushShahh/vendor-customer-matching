@@ -1,10 +1,367 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Count, Sum, F, Q
+from django.http import JsonResponse
+from accounts.models import Vendor
+from business.models import Business, BusinessCategory
+from product.models import Product, ProductCategory
+from .models import Sale
+from .forms import BusinessForm, ProductForm, SaleForm
 
 
+def vendor_required(view_func):
+    """Decorator to ensure only vendors can access certain views."""
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if request.user.user_type != 'vendor':
+            messages.error(request, "You must be a vendor to access this page.")
+            return redirect('customer:landing_page')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@vendor_required
 def index(request):
-    if request.user.is_authenticated:
-        if request.user.user_type == 'customer':
-            return redirect(reverse("customer:home_page"))
-        return render(request, 'vendor/index.html')
-    return redirect(reverse('customer:landing_page'))
+    """Vendor Dashboard/Overview"""
+    vendor = request.user.vendor
+    businesses = Business.objects.filter(vendor=vendor)
+    total_businesses = businesses.count()
+    
+    # Get all products across all businesses
+    products = Product.objects.filter(business__vendor=vendor)
+    total_products = products.count()
+    
+    # Get low inventory products (quantity < 10)
+    low_inventory = products.filter(quantity__lt=10, quantity__gt=0).count()
+    
+    # Get out of stock products
+    out_of_stock = products.filter(quantity=0).count()
+    
+    # Get total sales and profit
+    total_sales = Sale.get_total_revenue(period='month')
+    total_profit = Sale.get_total_profit(period='month')
+    
+    context = {
+        'total_businesses': total_businesses,
+        'total_products': total_products,
+        'low_inventory': low_inventory,
+        'out_of_stock': out_of_stock,
+        'total_sales': total_sales,
+        'total_profit': total_profit,
+    }
+    
+    return render(request, 'vendor/index.html', context)
+
+
+@vendor_required
+def business_list(request):
+    """List all businesses owned by the vendor"""
+    vendor = request.user.vendor
+    businesses = Business.objects.filter(vendor=vendor)
+    
+    context = {
+        'businesses': businesses,
+    }
+    
+    return render(request, 'vendor/business_list.html', context)
+
+
+@vendor_required
+def business_create(request):
+    """Create a new business"""
+    if request.method == 'POST':
+        form = BusinessForm(request.POST)
+        if form.is_valid():
+            business = form.save(commit=False)
+            business.vendor = request.user.vendor
+            business.save()
+            messages.success(request, f"Business '{business.name}' created successfully.")
+            return redirect('vendor:business_detail', business_id=business.id)
+    else:
+        form = BusinessForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create Business',
+    }
+    
+    return render(request, 'vendor/business_form.html', context)
+
+
+@vendor_required
+def business_detail(request, business_id):
+    """View details of a specific business"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    
+    # Get business stats
+    products = Product.objects.filter(business=business)
+    total_products = products.count()
+    low_inventory = products.filter(quantity__lt=10, quantity__gt=0).count()
+    out_of_stock = products.filter(quantity=0).count()
+    
+    # Get sales data
+    total_sales = Sale.get_total_revenue(business_id=business.id, period='month')
+    total_profit = Sale.get_total_profit(business_id=business.id, period='month')
+    
+    # Get customer ratings and reviews
+    average_rating = business.ratings.aggregate(avg_rating=Sum('rating') / Count('rating'))['avg_rating'] if business.ratings.exists() else 0
+    recent_reviews = business.reviews.order_by('-id')[:5]
+    
+    context = {
+        'business': business,
+        'total_products': total_products,
+        'low_inventory': low_inventory,
+        'out_of_stock': out_of_stock,
+        'total_sales': total_sales,
+        'total_profit': total_profit,
+        'average_rating': average_rating,
+        'recent_reviews': recent_reviews,
+    }
+    
+    return render(request, 'vendor/business_detail.html', context)
+
+
+@vendor_required
+def business_edit(request, business_id):
+    """Edit a business"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    
+    if request.method == 'POST':
+        form = BusinessForm(request.POST, instance=business)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Business '{business.name}' updated successfully.")
+            return redirect('vendor:business_detail', business_id=business.id)
+    else:
+        form = BusinessForm(instance=business)
+    
+    context = {
+        'form': form,
+        'business': business,
+        'title': 'Edit Business',
+    }
+    
+    return render(request, 'vendor/business_form.html', context)
+
+
+@vendor_required
+def business_delete(request, business_id):
+    """Delete a business"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    
+    if request.method == 'POST':
+        business_name = business.name
+        business.delete()
+        messages.success(request, f"Business '{business_name}' deleted successfully.")
+        return redirect('vendor:business_list')
+    
+    context = {
+        'business': business,
+    }
+    
+    return render(request, 'vendor/business_confirm_delete.html', context)
+
+
+@vendor_required
+def product_list(request, business_id):
+    """List all products for a specific business"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    products = Product.objects.filter(business=business)
+    
+    context = {
+        'business': business,
+        'products': products,
+    }
+    
+    return render(request, 'vendor/product_list.html', context)
+
+
+@vendor_required
+def product_create(request, business_id):
+    """Create a new product for a specific business"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.business = business
+            product.save()
+            messages.success(request, f"Product '{product.name}' added successfully.")
+            return redirect('vendor:product_list', business_id=business.id)
+    else:
+        form = ProductForm()
+    
+    context = {
+        'form': form,
+        'business': business,
+        'title': 'Add Product',
+    }
+    
+    return render(request, 'vendor/product_form.html', context)
+
+
+@vendor_required
+def product_edit(request, business_id, product_id):
+    """Edit a product"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    product = get_object_or_404(Product, id=product_id, business=business)
+    
+    if request.method == 'POST':
+        form = ProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Product '{product.name}' updated successfully.")
+            return redirect('vendor:product_list', business_id=business.id)
+    else:
+        form = ProductForm(instance=product)
+    
+    context = {
+        'form': form,
+        'business': business,
+        'product': product,
+        'title': 'Edit Product',
+    }
+    
+    return render(request, 'vendor/product_form.html', context)
+
+
+@vendor_required
+def product_delete(request, business_id, product_id):
+    """Delete a product"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    product = get_object_or_404(Product, id=product_id, business=business)
+    
+    if request.method == 'POST':
+        product_name = product.name
+        product.delete()
+        messages.success(request, f"Product '{product_name}' deleted successfully.")
+        return redirect('vendor:product_list', business_id=business.id)
+    
+    context = {
+        'business': business,
+        'product': product,
+    }
+    
+    return render(request, 'vendor/product_confirm_delete.html', context)
+
+
+@vendor_required
+def create_sale(request, business_id):
+    """Create a new sale for a product"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    
+    if request.method == 'POST':
+        form = SaleForm(request.POST, business=business)
+        if form.is_valid():
+            product = form.cleaned_data['product']
+            quantity = form.cleaned_data['quantity']
+            
+            # Check if there's enough inventory
+            if product.quantity < quantity:
+                messages.error(request, f"Not enough stock for {product.name}. Only {product.quantity} available.")
+                return redirect('vendor:create_sale', business_id=business.id)
+            
+            # Create the sale
+            sale = Sale(
+                product=product,
+                quantity=quantity,
+                selling_price=product.selling_price
+            )
+            sale.save()
+            
+            # Update product quantity
+            product.quantity -= quantity
+            product.save()
+            
+            messages.success(request, f"Sale of {quantity} {product.name}(s) recorded successfully.")
+            return redirect('vendor:product_list', business_id=business.id)
+    else:
+        form = SaleForm(business=business)
+    
+    context = {
+        'form': form,
+        'business': business,
+        'title': 'Record Sale',
+    }
+    
+    return render(request, 'vendor/sale_form.html', context)
+
+
+@vendor_required
+def sales_history(request, business_id):
+    """View sales history for a specific business"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    
+    # Filter by time period if provided
+    period = request.GET.get('period', 'month')
+    sales = Sale.get_sales_for_business(business_id=business.id, period=period)
+    
+    total_revenue = Sale.get_total_revenue(business_id=business.id, period=period)
+    total_profit = Sale.get_total_profit(business_id=business.id, period=period)
+    
+    context = {
+        'business': business,
+        'sales': sales,
+        'period': period,
+        'total_revenue': total_revenue,
+        'total_profit': total_profit,
+    }
+    
+    return render(request, 'vendor/sales_history.html', context)
+
+
+@vendor_required
+def analytics(request):
+    """View analytics across all businesses"""
+    vendor = request.user.vendor
+    businesses = Business.objects.filter(vendor=vendor)
+    
+    # Filter by time period if provided
+    period = request.GET.get('period', 'month')
+    
+    # Overall stats
+    total_businesses = businesses.count()
+    total_products = Product.objects.filter(business__vendor=vendor).count()
+    low_inventory = Product.objects.filter(business__vendor=vendor, quantity__lt=10, quantity__gt=0).count()
+    out_of_stock = Product.objects.filter(business__vendor=vendor, quantity=0).count()
+    
+    # Sales stats
+    total_revenue = Sale.get_total_revenue(period=period)
+    total_profit = Sale.get_total_profit(period=period)
+    
+    # Per-business data for charts
+    business_data = []
+    for business in businesses:
+        business_revenue = Sale.get_total_revenue(business_id=business.id, period=period)
+        business_profit = Sale.get_total_profit(business_id=business.id, period=period)
+        
+        business_data.append({
+            'name': business.name,
+            'revenue': business_revenue,
+            'profit': business_profit,
+        })
+    
+    context = {
+        'total_businesses': total_businesses,
+        'total_products': total_products,
+        'low_inventory': low_inventory,
+        'out_of_stock': out_of_stock,
+        'total_revenue': total_revenue,
+        'total_profit': total_profit,
+        'business_data': business_data,
+        'period': period,
+    }
+    
+    return render(request, 'vendor/analytics.html', context)

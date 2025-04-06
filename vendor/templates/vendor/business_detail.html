@@ -1,0 +1,97 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}{{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <div class="breadcrumb-item"><a href="{% url 'vendor:business_list' %}">My Businesses</a></div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item active">{{ business.name }}</div>
+</div>
+
+<h1>{{ business.name }}</h1>
+
+<div class="business-details">
+    <div class="business-info">
+        <p class="description">{{ business.description }}</p>
+        <p><strong>Category:</strong> {{ business.category|default:"Uncategorized" }}</p>
+        <p><strong>Address:</strong> {{ business.address }}, {{ business.area }}, {{ business.city }}, {{ business.state }}</p>
+        <p><strong>Phone:</strong> {{ business.phone_number }}</p>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'vendor:business_edit' business.id %}" class="btn btn-primary">Edit Business</a>
+        <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-success">Products</a>
+        <a href="{% url 'vendor:create_sale' business.id %}" class="btn btn-secondary">Record Sale</a>
+        <a href="{% url 'vendor:sales_history' business.id %}" class="btn btn-secondary">Sales History</a>
+        <a href="{% url 'vendor:business_delete' business.id %}" class="btn btn-danger">Delete</a>
+    </div>
+</div>
+
+<div class="overview">
+    <div class="stat-card">
+        <h3>Products</h3>
+        <p>{{ total_products }}</p>
+        <small>Total products</small>
+    </div>
+    <div class="stat-card">
+        <h3>Low Stock</h3>
+        <p>{{ low_inventory }}</p>
+        <small>Products with low inventory</small>
+    </div>
+    <div class="stat-card">
+        <h3>Out of Stock</h3>
+        <p>{{ out_of_stock }}</p>
+        <small>Products that need attention</small>
+    </div>
+    <div class="stat-card">
+        <h3>Average Rating</h3>
+        <p>{{ average_rating|floatformat:1 }}/10</p>
+        <div class="stars-container">
+            {% for i in "12345" %}
+                {% if forloop.counter <= average_rating|floatformat:0|divisibleby:2 %}
+                    <span class="star filled">★</span>
+                {% else %}
+                    <span class="star">★</span>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <small>Customer satisfaction</small>
+    </div>
+</div>
+
+<div class="overview">
+    <div class="stat-card">
+        <h3>Monthly Revenue</h3>
+        <p>₹{{ total_sales }}</p>
+        <small>Sales in the last month</small>
+    </div>
+    <div class="stat-card">
+        <h3>Monthly Profit</h3>
+        <p>₹{{ total_profit }}</p>
+        <small>Profit in the last month</small>
+    </div>
+</div>
+
+{% if recent_reviews %}
+<div class="section">
+    <h2>Customer Reviews</h2>
+    <div class="review-list">
+        {% for review in recent_reviews %}
+            <div class="review-item">
+                <div class="rating">{{ review.rating }}/10</div>
+                <p>{{ review.review }}</p>
+                <p class="meta">- {{ review.user.user.first_name }} {{ review.user.user.last_name|first }}.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if recent_reviews.count > 5 %}
+        <div class="view-more">
+            <button class="btn btn-secondary">View All Reviews</button>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

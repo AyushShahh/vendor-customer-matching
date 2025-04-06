@@ -1,0 +1,167 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <div class="breadcrumb-item"><a href="{% url 'vendor:business_list' %}">My Businesses</a></div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item"><a href="{% url 'vendor:business_detail' business.id %}">{{ business.name }}</a></div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item"><a href="{% url 'vendor:product_list' business.id %}">Products</a></div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item active">{{ title }}</div>
+</div>
+
+<h1>{{ title }}</h1>
+
+<div class="section">
+    <form method="post" class="form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">Product Name:</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="error">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description:</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="error">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.cost_price.id_for_label }}">Cost Price (₹):</label>
+                {{ form.cost_price }}
+                {% if form.cost_price.errors %}
+                    <div class="error">{{ form.cost_price.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.selling_price.id_for_label }}">Selling Price (₹):</label>
+                {{ form.selling_price }}
+                {% if form.selling_price.errors %}
+                    <div class="error">{{ form.selling_price.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.quantity.id_for_label }}">Quantity in Stock:</label>
+                {{ form.quantity }}
+                {% if form.quantity.errors %}
+                    <div class="error">{{ form.quantity.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">Category:</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="error">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Product</button>
+            <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% if product and product.id %}
+<!-- Show minimal analytics without reviews -->
+<div class="section">
+    <h2>Product Analytics</h2>
+    
+    <div class="overview">
+        <div class="stat-card">
+            <h3>Sales</h3>
+            <p>{{ product.total_sales|default:"0" }}</p>
+            <small>Units sold</small>
+        </div>
+        <div class="stat-card">
+            <h3>Revenue</h3>
+            <p>₹{{ product.total_revenue|default:"0" }}</p>
+            <small>Total earnings</small>
+        </div>
+        {% if product.average_rating %}
+        <div class="stat-card">
+            <h3>Average Rating</h3>
+            <p>{{ product.average_rating|default:"0"|floatformat:1 }}/5</p>
+            <div class="stars-container">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= product.average_rating|default:0|floatformat:0 %}
+                        <span class="star filled">★</span>
+                    {% else %}
+                        <span class="star">★</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <small>
+                <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-sm btn-secondary">View Reviews</a>
+            </small>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="productSalesChart" height="200"></canvas>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Product sales chart
+    const ctx = document.getElementById('productSalesChart').getContext('2d');
+    
+    // Actual data should be passed from the backend
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const salesData = [5, 8, 12, 14, 10, 15];
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Units Sold',
+                data: salesData,
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Units'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Sales History'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

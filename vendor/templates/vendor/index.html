@@ -1,109 +1,61 @@
+{% extends "vendor/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendor Dashboard - MarketPlace</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="{% static 'vendor/styles/index.css' %}">
-    <script defer src="{% static 'vendor/scripts/index.js' %}"></script>
-</head>
-<body>
-    <div class="sidebar">
-        <h2>MarketPlace</h2>
-        <ul>
-            <li><a href="#" class="active" onclick="showSection('overview')"><span>📊</span> Overview</a></li>
-            <li><a href="#" onclick="showSection('stores')"><span>🏪</span> Stores</a></li>
-            <li><a href="#" onclick="showSection('products')"><span>📦</span> Products</a></li>
-            <li><a href="#" onclick="showSection('analytics')"><span>📈</span> Analytics</a></li>
-        </ul>
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>Vendor Dashboard</h1>
+
+<div class="overview">
+    <div class="stat-card">
+        <h3>Total Businesses</h3>
+        <p>{{ total_businesses }}</p>
+        <small>Your active businesses</small>
     </div>
-
-    <div class="main-content">
-        <div id="toast" class="toast"></div>
-
-        <div id="overviewSection">
-            <div class="overview">
-                <div class="stat-card">
-                    <h3>Total Stores</h3>
-                    <p id="totalStores">0</p>
-                    <small>Your active stores</small>
-                </div>
-                <div class="stat-card">
-                    <h3>Total Products</h3>
-                    <p id="totalProducts">0</p>
-                    <small>Across all stores</small>
-                </div>
-                <div class="stat-card">
-                    <h3>Low Stock</h3>
-                    <p id="lowStock">0</p>
-                    <small>Products with low inventory</small>
-                </div>
-                <div class="stat-card">
-                    <h3>Out of Stock</h3>
-                    <p id="outOfStock">0</p>
-                    <small>Products that need attention</small>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2>Recent Stores</h2>
-                <p>Your recently created stores</p>
-                <div id="recentStores"></div>
-            </div>
-
-            <div class="section">
-                <h2>Recent Products</h2>
-                <p>Your recently added products</p>
-                <div id="recentProducts"></div>
-            </div>
-        </div>
-        
-        <div id="storesSection" style="display: none;">
-            <div class="section">
-                <h2>Add New Shop</h2>
-                <div class="form-group">
-                    <input type="text" id="shopName" placeholder="Shop Name">
-                    <button onclick="addShop()">Add Shop</button>
-                </div>
-                <div class="search-bar">
-                    <input type="text" id="shopSearch" placeholder="Search shops..." onkeyup="searchShops()">
-                </div>
-                <div id="shopList"></div>
-            </div>
-        </div>
-
-        <div id="productsSection" style="display: none;">
-            <div class="section">
-                <h2>Add Product</h2>
-                <div class="form-group">
-                    <select id="shopSelect"></select>
-                    <input type="text" id="productName" placeholder="Product Name">
-                    <input type="number" id="quantity" placeholder="Quantity">
-                    <input type="number" id="price" placeholder="Price (₹)">
-                    <select id="category">
-                        <option value="Electronics">Electronics</option>
-                        <option value="Fashion">Fashion</option>
-                        <option value="Home">Home</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input type="file" id="productImage" accept="image/*">
-                    <button onclick="addProduct()">Add Product</button>
-                </div>
-                <div class="search-bar">
-                    <input type="text" id="productSearch" placeholder="Search products..." onkeyup="searchProducts()">
-                </div>
-                <div id="productList"></div>
-            </div>
-        </div>
-
-        <div id="analyticsSection" style="display: none;">
-            <div class="section">
-                <h2>Shop Analytics</h2>
-                <canvas id="analyticsChart" height="100"></canvas>
-            </div>
-        </div>
+    <div class="stat-card">
+        <h3>Total Products</h3>
+        <p>{{ total_products }}</p>
+        <small>Across all businesses</small>
     </div>
-</body>
-</html>
+    <div class="stat-card">
+        <h3>Low Stock</h3>
+        <p>{{ low_inventory }}</p>
+        <small>Products with low inventory</small>
+    </div>
+    <div class="stat-card">
+        <h3>Out of Stock</h3>
+        <p>{{ out_of_stock }}</p>
+        <small>Products that need attention</small>
+    </div>
+</div>
+
+<div class="overview">
+    <div class="stat-card">
+        <h3>Monthly Sales</h3>
+        <p>₹{{ total_sales }}</p>
+        <small>Revenue in the last month</small>
+    </div>
+    <div class="stat-card">
+        <h3>Monthly Profit</h3>
+        <p>₹{{ total_profit }}</p>
+        <small>Profit in the last month</small>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Quick Actions</h2>
+    <div class="action-buttons">
+        <a href="{% url 'vendor:business_create' %}" class="btn btn-primary">
+            Add New Business
+        </a>
+        {% if total_businesses > 0 %}
+            <a href="{% url 'vendor:business_list' %}" class="btn btn-success">
+                Manage Businesses
+            </a>
+        {% endif %}
+        <a href="{% url 'vendor:analytics' %}" class="btn btn-secondary">
+            View Analytics
+        </a>
+    </div>
+</div>
+{% endblock %}

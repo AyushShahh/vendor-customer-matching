@@ -4,35 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Removed Bootstrap links for vendor-like design -->
     <title>Find products</title>
     <link href="{% static 'customer/styles/index.css' %}" rel="stylesheet">
+    <script defer src="{% static 'customer/js/index.js' %}"></script>
 </head>
 <body>
     <div class="sidebar">
         <h2>MarketPlace</h2>
-        <!-- New customer profile section -->
         <div class="customer-profile">
             <p>Hello, {{ request.user.first_name }}</p>
             <a href="{% url 'accounts:profile' %}" class="profile-link">View Profile</a>
         </div>
         <ul>
-            <li><a href="#" class="active" onclick="showSection('overview')"><span>📊</span> Overview</a></li>
-            <li><a href="#" onclick="showSection('categories')"><span>📂</span> Categories</a></li>
-            <li><a href="#" onclick="showSection('deals')"><span>🔥</span> Deals</a></li>
-            <li><a href="#" onclick="showSection('contact')"><span>✉️</span> Contact</a></li>
+            <li><a href="#" class="active"><span>📊</span> Overview</a></li>
+            <li><a href="#"><span>📂</span> Categories</a></li>
+            <li><a href="#"><span>🔥</span> Deals</a></li>
+            <li><a href="#"><span>✉️</span> Contact</a></li>
         </ul>
     </div>
     <div class="main-content">
         <div id="toast" class="toast"></div>
-        <!-- Top Search Bar -->
         <div class="search-bar">
             <form id="search-form">
                 <input type="search" placeholder="Search products..." aria-label="Search">
                 <button type="submit">Search</button>
             </form>
         </div>
-        <!-- Filter/Sort Options -->
         <div class="form-group">
             <select id="filter-price">
                 <option selected>Price</option>
@@ -60,7 +57,6 @@
                 <option>Category Y</option>
             </select>
         </div>
-        <!-- Product Listing Sections -->
         <section class="section">
             <h2>Popular products in {{ request.user.area }}</h2>
             <div class="product-list">
@@ -71,7 +67,6 @@
                         <p>$100 | Rating: 5<br>Shop: A</p>
                     </div>
                 </div>
-                <!-- ...additional product cards... -->
             </div>
         </section>
         <section class="section">
@@ -84,11 +79,8 @@
                         <p>$200 | Rating: 4<br>Shop: B</p>
                     </div>
                 </div>
-                <!-- ...additional product cards... -->
             </div>
         </section>
     </div>
-    <!-- Include JavaScript file for functionality -->
-    <script src="{% static 'customer/js/index.js' %}"></script>
 </body>
 </html>

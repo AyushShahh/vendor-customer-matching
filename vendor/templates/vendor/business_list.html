@@ -1,0 +1,46 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}My Businesses{% endblock %}
+
+{% block content %}
+<h1>My Businesses</h1>
+
+<div class="section">
+    <div class="action-bar">
+        <a href="{% url 'vendor:business_create' %}" class="btn btn-primary">
+            Add New Business
+        </a>
+    </div>
+
+    {% if businesses %}
+        <div class="business-grid">
+            {% for business in businesses %}
+                <div class="business-card">
+                    <h3>{{ business.name }}</h3>
+                    <p>{{ business.description|truncatechars:100 }}</p>
+                    <div class="meta">
+                        <span class="location">{{ business.city }}, {{ business.state }}</span>
+                        <span class="category">{{ business.category|default:"Uncategorized" }}</span>
+                    </div>
+                    <div class="business-actions">
+                        <a href="{% url 'vendor:business_detail' business.id %}" class="btn btn-primary">
+                            View Details
+                        </a>
+                        <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-success">
+                            Products
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>You haven't created any businesses yet.</p>
+            <a href="{% url 'vendor:business_create' %}" class="btn btn-primary">
+                Create Your First Business
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

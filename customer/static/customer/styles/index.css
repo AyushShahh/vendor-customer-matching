@@ -39,6 +39,7 @@ body {
     border-radius: 8px;
     transition: background 0.3s ease;
 }
+
 .sidebar ul li a:hover, .sidebar ul li a.active {
     background: #333;
     color: white;

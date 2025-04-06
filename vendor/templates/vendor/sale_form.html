@@ -1,0 +1,53 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}Record Sale - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:business_list' %}">My Businesses</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:business_detail' business.id %}">{{ business.name }}</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:product_list' business.id %}">Products</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item active">Record Sale</div>
+</div>
+
+<h1>Record Sale for {{ business.name }}</h1>
+
+<div class="section">
+    <form method="post" class="form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.product.id_for_label }}">Select Product:</label>
+            {{ form.product }}
+            {% if form.product.errors %}
+                <div class="error">{{ form.product.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.quantity.id_for_label }}">Quantity:</label>
+            {{ form.quantity }}
+            {% if form.quantity.errors %}
+                <div class="error">{{ form.quantity.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i>💰</i> Record Sale
+            </button>
+            <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

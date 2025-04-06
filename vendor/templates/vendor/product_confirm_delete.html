@@ -1,0 +1,39 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}Delete {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:business_list' %}">My Businesses</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:business_detail' business.id %}">{{ business.name }}</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item">
+        <a href="{% url 'vendor:product_list' business.id %}">Products</a>
+    </div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item active">Delete Product</div>
+</div>
+
+<div class="delete-confirmation">
+    <h1>Delete Product</h1>
+    
+    <div class="alert alert-danger">
+        <p>Are you sure you want to delete the product <strong>"{{ product.name }}"</strong>?</p>
+        <p>This action cannot be undone. All sales data for this product will also be deleted.</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Yes, Delete Product</button>
+            <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

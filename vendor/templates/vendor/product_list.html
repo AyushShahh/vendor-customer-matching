@@ -1,0 +1,76 @@
+{% extends "vendor/base.html" %}
+{% load static %}
+
+{% block title %}Products - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <div class="breadcrumb-item"><a href="{% url 'vendor:business_list' %}">My Businesses</a></div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item"><a href="{% url 'vendor:business_detail' business.id %}">{{ business.name }}</a></div>
+    <div class="breadcrumb-separator">›</div>
+    <div class="breadcrumb-item active">Products</div>
+</div>
+
+<h1>Products for {{ business.name }}</h1>
+
+<div class="section">
+    <div class="action-bar">
+        <a href="{% url 'vendor:product_create' business.id %}" class="btn btn-primary">Add Product</a>
+        <a href="{% url 'vendor:create_sale' business.id %}" class="btn btn-success">Record Sale</a>
+    </div>
+    
+    {% if products %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Cost Price</th>
+                        <th>Selling Price</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>₹{{ product.cost_price }}</td>
+                            <td>₹{{ product.selling_price }}</td>
+                            <td>{{ product.quantity }}</td>
+                            <td>
+                                {% if product.quantity == 0 %}
+                                    <span class="badge badge-danger">Out of Stock</span>
+                                {% elif product.quantity < 10 %}
+                                    <span class="badge badge-warning">Low Stock</span>
+                                {% else %}
+                                    <span class="badge badge-success">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'vendor:product_edit' business.id product.id %}" class="btn btn-sm btn-primary">Edit</a>
+                                    <a href="{% url 'vendor:product_delete' business.id product.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No products found for this business.</p>
+            <a href="{% url 'vendor:product_create' business.id %}" class="btn btn-primary">Add Your First Product</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="navigation-links">
+    <a href="{% url 'vendor:business_detail' business.id %}" class="btn btn-secondary">Back to Business</a>
+</div>
+{% endblock %}
