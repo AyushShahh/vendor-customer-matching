@@ -4,9 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find products</title>
+    <title>Customer Home</title>
     <link href="{% static 'customer/styles/index.css' %}" rel="stylesheet">
     <script defer src="{% static 'customer/js/index.js' %}"></script>
+    <style>
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .product-card a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            height: 100%;
+            padding: 1.5rem;
+        }
+        
+        .product-info h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .product-info p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+        
+        .price-rating {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .section h2 {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .no-products {
+            text-align: center;
+            color: #666;
+            padding: 2rem 0;
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar">
@@ -16,69 +77,60 @@
             <a href="{% url 'accounts:profile' %}" class="profile-link">View Profile</a>
         </div>
         <ul>
-            <li><a href="#" class="active"><span>📊</span> Overview</a></li>
-            <li><a href="#"><span>📂</span> Categories</a></li>
-            <li><a href="#"><span>🔥</span> Deals</a></li>
-            <li><a href="#"><span>✉️</span> Contact</a></li>
+            <li><a href="{% url 'customer:home_page' %}" class="active"><span>🏠</span> Home</a></li>
+            <li><a href="{% url 'customer:search' %}"><span>🔍</span> Search</a></li>
+            <li><a href="{% url 'customer:watchlist' %}"><span>⭐</span> Watchlist</a></li>
+            <li><a href="{% url 'accounts:profile' %}"><span>👤</span> View Profile</a></li>
+            <li>
+            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit"><span>🚪</span> Logout</button>
+            </form>
+            </li>
         </ul>
     </div>
     <div class="main-content">
         <div id="toast" class="toast"></div>
-        <div class="search-bar">
-            <form id="search-form">
-                <input type="search" placeholder="Search products..." aria-label="Search">
-                <button type="submit">Search</button>
-            </form>
-        </div>
-        <div class="form-group">
-            <select id="filter-price">
-                <option selected>Price</option>
-                <option>Low to High</option>
-                <option>High to Low</option>
-            </select>
-            <select id="filter-rating">
-                <option selected>Rating</option>
-                <option>High to Low</option>
-                <option>Low to High</option>
-            </select>
-            <select id="filter-area">
-                <option selected>Area</option>
-                <option>Area 1</option>
-                <option>Area 2</option>
-            </select>
-            <select id="filter-shop">
-                <option selected>Shop</option>
-                <option>Shop A</option>
-                <option>Shop B</option>
-            </select>
-            <select id="filter-category">
-                <option selected>Category</option>
-                <option>Category X</option>
-                <option>Category Y</option>
-            </select>
-        </div>
+        
         <section class="section">
-            <h2>Popular products in {{ request.user.area }}</h2>
-            <div class="product-list">
-                <div class="product-card">
-                    <img src="https://burst.shopifycdn.com/photos/photography-product-download.jpg?width=1000&format=pjpg&exif=0&iptc=0" alt="Product 1">
-                    <div class="product-info">
-                        <h3>Product 1</h3>
-                        <p>$100 | Rating: 5<br>Shop: A</p>
-                    </div>
-                </div>
+            <h2>Popular Products in {{ request.user.area }}</h2>
+            <div class="product-grid">
+                {% if popular_products %}
+                    {% for product in popular_products %}
+                        <div class="product-card">
+                            <a href="{% url 'customer:product_detail' product.id %}">
+                                <div class="product-info">
+                                    <h3>{{ product.name }}</h3>
+                                    <p class="price-rating">${{ product.selling_price }} | Rating: {{ product.average_rating|default:"No ratings" }}</p>
+                                    <p>Shop: {{ product.business.name }}</p>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No popular products found in your area.</p>
+                {% endif %}
             </div>
         </section>
+
         <section class="section">
-            <h2>Popular products in {{ request.user.city }}</h2>
-            <div class="product-list">
-                <div class="product-card">
-                    <img src="https://burst.shopifycdn.com/photos/photography-product-download.jpg?width=1000&format=pjpg&exif=0&iptc=0" alt="Product 2">
-                    <div class="product-info">
-                        <h3>Product 2</h3>
-                        <p>$200 | Rating: 4<br>Shop: B</p>
-                    </div>
-                </div>
+            <h2>Highly Rated Products in {{ request.user.area }}</h2>
+            <div class="product-grid">
+                {% if highly_rated_products %}
+                    {% for product in highly_rated_products %}
+                        <div class="product-card">
+                            <a href="{% url 'customer:product_detail' product.id %}">
+                                <div class="product-info">
+                                    <h3>{{ product.name }}</h3>
+                                    <p class="price-rating">${{ product.selling_price }} | Rating: {{ product.average_rating|default:"No ratings" }}</p>
+                                    <p>Shop: {{ product.business.name }}</p>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No highly rated products found in your area.</p>
+                {% endif %}
             </div>
         </section>
     </div>

@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Watchlist</title>
+    <link href="{% static 'customer/styles/index.css' %}" rel="stylesheet">
+    <style>
+        .page-title {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .product-card a {
+            text-decoration: none;
+            color: inherit;
+            flex: 1;
+            padding: 1.5rem;
+            padding-bottom: 3.5rem;
+        }
+        
+        .product-info h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .product-info p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+        
+        .price-rating {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .watchlist-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-top: 1px solid #eee;
+        }
+        
+        .remove-from-watchlist-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .empty-watchlist {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .empty-watchlist p {
+            margin: 1rem 0;
+            color: #666;
+        }
+        
+        .browse-products-btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>MarketPlace</h2>
+        <div class="customer-profile">
+            <p>Hello, {{ request.user.first_name }}</p>
+            <a href="{% url 'accounts:profile' %}" class="profile-link">View Profile</a>
+        </div>
+        <ul>
+            <li><a href="{% url 'customer:home_page' %}"><span>🏠</span> Home</a></li>
+            <li><a href="{% url 'customer:search' %}"><span>🔍</span> Search</a></li>
+            <li><a href="{% url 'customer:watchlist' %}" class="active"><span>⭐</span> Watchlist</a></li>
+            <li><a href="{% url 'accounts:profile' %}"><span>👤</span> View Profile</a></li>
+            <li><a href="{% url 'accounts:logout' %}"><span>🚪</span> Logout</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div id="toast" class="toast"></div>
+        
+        <h1 class="page-title">Your Watchlist</h1>
+        
+        <div class="watchlist-container">
+            {% if watchlist_items %}
+                <div class="product-grid">
+                    {% for item in watchlist_items %}
+                        <div class="product-card">
+                            <a href="{% url 'customer:product_detail' item.product.id %}">
+                                <div class="product-info">
+                                    <h3>{{ item.product.name }}</h3>
+                                    <p class="price-rating">${{ item.product.selling_price }} | Rating: {{ item.product.average_rating|default:"No ratings" }}</p>
+                                    <p>Shop: {{ item.product.business.name }}</p>
+                                    <p>Area: {{ item.product.business.area }}</p>
+                                </div>
+                            </a>
+                            <div class="watchlist-actions">
+                                <form method="post" action="{% url 'customer:remove_from_watchlist' item.product.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="remove-from-watchlist-btn">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-watchlist">
+                    <p>Your watchlist is empty.</p>
+                    <p>Browse products and add them to your watchlist to keep track of products you're interested in.</p>
+                    <a href="{% url 'customer:search' %}" class="browse-products-btn">Browse Products</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

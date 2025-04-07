@@ -25,10 +25,10 @@ body {
     list-style: none;
     padding: 0;
 }
-.sidebar ul li {
+.sidebar ul li, .sidebar ul li form {
     margin-bottom: 20px;
 }
-.sidebar ul li a {
+.sidebar ul li a, .sidebar ul li form button {
     color: #ccc;
     text-decoration: none;
     font-size: 1.1em;
@@ -40,9 +40,13 @@ body {
     transition: background 0.3s ease;
 }
 
-.sidebar ul li a:hover, .sidebar ul li a.active {
+.sidebar ul li a:hover, .sidebar ul li a.active, .sidebar ul li form button:hover {
     background: #333;
     color: white;
+}
+
+.sidebar form button {
+    width: 100%;
 }
 
 

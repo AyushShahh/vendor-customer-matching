@@ -1,0 +1,377 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Details</title>
+    <link href="{% static 'customer/styles/index.css' %}" rel="stylesheet">
+    <script defer src="{% static 'customer/js/product_detail.js' %}"></script>
+    <style>
+        .back-button {
+            margin-bottom: 1rem;
+        }
+        
+        .back-button a {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #f1f1f1;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .product-detail-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .product-detail-header {
+            padding: 2rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .product-info-container h1 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 1rem 0;
+        }
+        
+        .product-rating {
+            margin-bottom: 1.5rem;
+        }
+        
+        .rating-value {
+            font-weight: 500;
+        }
+        
+        .rating-stars {
+            color: gold;
+            margin-left: 0.5rem;
+        }
+        
+        .product-actions {
+            margin: 1.5rem 0;
+        }
+        
+        .add-to-watchlist-btn, .remove-from-watchlist-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .add-to-watchlist-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .remove-from-watchlist-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .product-description {
+            margin-top: 1.5rem;
+        }
+        
+        .product-description h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .business-info-container {
+            padding: 2rem;
+            border-bottom: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+        
+        .business-info-container h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .business-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .business-info-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+        }
+        
+        .business-info-item .label {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: #666;
+        }
+        
+        .business-info-item .value {
+            font-weight: normal;
+            color: #333;
+        }
+        
+        .reviews-section {
+            padding: 2rem;
+        }
+        
+        .reviews-section h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .add-review-container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .add-review-container h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .rating-input {
+            margin-bottom: 1rem;
+        }
+        
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+        
+        .star-rating input {
+            display: none;
+        }
+        
+        .star-rating label {
+            font-size: 1.5rem;
+            color: #ddd;
+            cursor: pointer;
+            padding: 0 0.25rem;
+        }
+        
+        .star-rating input:checked ~ label {
+            color: gold;
+        }
+        
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: gold;
+        }
+        
+        .review-input textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        
+        .submit-review-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+        
+        .review-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .review-card {
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .reviewer-name {
+            font-weight: 500;
+        }
+        
+        .review-rating {
+            color: gold;
+        }
+        
+        .review-text {
+            color: #333;
+            margin: 0;
+        }
+        
+        .no-reviews {
+            text-align: center;
+            color: #666;
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>MarketPlace</h2>
+        <div class="customer-profile">
+            <p>Hello, {{ request.user.first_name }}</p>
+            <a href="{% url 'accounts:profile' %}" class="profile-link">View Profile</a>
+        </div>
+        <ul>
+            <li><a href="{% url 'customer:home_page' %}"><span>🏠</span> Home</a></li>
+            <li><a href="{% url 'customer:search' %}"><span>🔍</span> Search</a></li>
+            <li><a href="{% url 'customer:watchlist' %}"><span>⭐</span> Watchlist</a></li>
+            <li><a href="{% url 'accounts:profile' %}"><span>👤</span> View Profile</a></li>
+            <li><a href="{% url 'accounts:logout' %}"><span>🚪</span> Logout</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div id="toast" class="toast"></div>
+        
+        <div class="back-button">
+            <a href="javascript:history.back()">← Back</a>
+        </div>
+        
+        <div class="product-detail-container">
+            <div class="product-detail-header">
+                <div class="product-info-container">
+                    <h1>{{ product.name }}</h1>
+                    <p class="product-price">${{ product.selling_price }}</p>
+                    <p class="product-rating">Average Rating: 
+                        <span class="rating-value">{{ product.average_rating|default:"No ratings yet" }}</span>
+                        {% if product.average_rating %}
+                            <span class="rating-stars">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= product.average_rating|floatformat:"0" %}
+                                        ★
+                                    {% else %}
+                                        ☆
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                        {% endif %}
+                    </p>
+                    <div class="product-actions">
+                        {% if is_in_watchlist %}
+                            <form method="post" action="{% url 'customer:remove_from_watchlist' product.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="remove-from-watchlist-btn">Remove from Watchlist</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'customer:add_to_watchlist' product.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="add-to-watchlist-btn">Add to Watchlist</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="product-description">
+                        <h3>Description</h3>
+                        <p>{{ product.description }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="business-info-container">
+                <h2>Business Information</h2>
+                <div class="business-details">
+                    <div class="business-info-item">
+                        <span class="label">Name:</span>
+                        <span class="value">{{ product.business.name }}</span>
+                    </div>
+                    <div class="business-info-item">
+                        <span class="label">Address:</span>
+                        <span class="value">{{ product.business.address }}, {{ product.business.area }}, {{ product.business.city }}</span>
+                    </div>
+                    <div class="business-info-item">
+                        <span class="label">Contact:</span>
+                        <span class="value">{{ product.business.contact_number }}</span>
+                    </div>
+                    <div class="business-info-item">
+                        <span class="label">Rating:</span>
+                        <span class="value">{{ product.business.average_rating|default:"No ratings yet" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="reviews-section">
+                <h2>Customer Reviews</h2>
+                
+                {% if user_can_review %}
+                <div class="add-review-container">
+                    <h3>Add Your Review</h3>
+                    <form method="post" action="{% url 'customer:add_review' product.id %}" class="review-form">
+                        {% csrf_token %}
+                        <div class="rating-input">
+                            <p>Rating:</p>
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="rating" value="5" required>
+                                <label for="star5">★</label>
+                                <input type="radio" id="star4" name="rating" value="4" required>
+                                <label for="star4">★</label>
+                                <input type="radio" id="star3" name="rating" value="3" required>
+                                <label for="star3">★</label>
+                                <input type="radio" id="star2" name="rating" value="2" required>
+                                <label for="star2">★</label>
+                                <input type="radio" id="star1" name="rating" value="1" required>
+                                <label for="star1">★</label>
+                            </div>
+                        </div>
+                        <div class="review-input">
+                            <textarea name="review" rows="4" placeholder="Write your review here..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-review-btn">Submit Review</button>
+                    </form>
+                </div>
+                {% endif %}
+                
+                <div class="review-list">
+                    {% if reviews %}
+                        {% for review in reviews %}
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <span class="reviewer-name">{{ review.user.first_name }} {{ review.user.last_name }}</span>
+                                    <span class="review-rating">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                ★
+                                            {% else %}
+                                                ☆
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                <p class="review-text">{{ review.review }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-reviews">No reviews for this product yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
