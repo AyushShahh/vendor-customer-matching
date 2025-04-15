@@ -91,25 +91,24 @@
 <!-- Show minimal analytics without reviews -->
 <div class="section">
     <h2>Product Analytics</h2>
-    
     <div class="overview">
         <div class="stat-card">
             <h3>Sales</h3>
-            <p>{{ product.total_sales|default:"0" }}</p>
+            <p>{{ product_analytics.total_sales|default:"0" }}</p>
             <small>Units sold</small>
         </div>
         <div class="stat-card">
             <h3>Revenue</h3>
-            <p>₹{{ product.total_revenue|default:"0" }}</p>
+            <p>₹{{ product_analytics.total_revenue|default:"0" }}</p>
             <small>Total earnings</small>
         </div>
-        {% if product.average_rating %}
+        {% if product_analytics.average_rating %}
         <div class="stat-card">
             <h3>Average Rating</h3>
-            <p>{{ product.average_rating|default:"0"|floatformat:1 }}/5</p>
+            <p>{{ product_analytics.average_rating|default:"0"|floatformat:1 }}/5</p>
             <div class="stars-container">
                 {% for i in "12345" %}
-                    {% if forloop.counter <= product.average_rating|default:0|floatformat:0 %}
+                    {% if forloop.counter <= product_analytics.average_rating|default:0|floatformat:0 %}
                         <span class="star filled">★</span>
                     {% else %}
                         <span class="star">★</span>
@@ -122,54 +121,6 @@
         </div>
         {% endif %}
     </div>
-    
-    <div class="chart-container">
-        <canvas id="productSalesChart" height="200"></canvas>
-    </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Product sales chart
-    const ctx = document.getElementById('productSalesChart').getContext('2d');
-    
-    // Actual data should be passed from the backend
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const salesData = [5, 8, 12, 14, 10, 15];
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: months,
-            datasets: [{
-                label: 'Units Sold',
-                data: salesData,
-                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Units'
-                    }
-                }
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Sales History'
-                }
-            }
-        }
-    });
-});
-</script>
 {% endif %}
 {% endblock %}

@@ -62,7 +62,7 @@
     </div>
     
     <div class="chart-container">
-        <canvas id="salesChart" height="300"></canvas>
+        <!-- Chart removed as per request -->
     </div>
     
     {% if sales %}
@@ -106,58 +106,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sales data visualization
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        
-        // Sample data - replace with actual data from backend
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const salesData = [4500, 5200, 4800, 6300, 7400, 9200, 8100];
-        
-        new Chart(salesCtx, {
-            type: 'bar',
-            data: {
-                labels: days,
-                datasets: [{
-                    label: 'Daily Sales',
-                    data: salesData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Amount (₹)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value;
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Daily Sales Overview'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Sales: ₹' + context.parsed.y;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-</script>
+<!-- Chart script removed as per request -->
 {% endblock %}

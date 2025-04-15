@@ -2,13 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Sum, F, Q
+from django.db.models import Count, Sum, F, Q, Avg
 from django.http import JsonResponse
 from accounts.models import Vendor
 from business.models import Business, BusinessCategory
 from product.models import Product, ProductCategory
 from .models import Sale
 from .forms import BusinessForm, ProductForm, SaleForm
+from django.db.models.functions import TruncDay, TruncMonth
 
 
 def vendor_required(view_func):
@@ -224,11 +225,38 @@ def product_edit(request, business_id, product_id):
     else:
         form = ProductForm(instance=product)
     
+    # --- Analytics ---
+    sales = Sale.objects.filter(product=product)
+    total_sales = sales.aggregate(total=Sum('quantity'))['total'] or 0
+    total_revenue = sales.aggregate(total=Sum(F('quantity') * F('selling_price')))['total'] or 0
+    average_rating = product.ratings.aggregate(avg=Avg('rating'))['avg'] if hasattr(product, 'ratings') else None
+
+    # Monthly sales for chart (last 6 months)
+    from django.utils import timezone
+    from datetime import timedelta
+    today = timezone.now().date()
+    months = []
+    sales_data = []
+    for i in range(5, -1, -1):
+        month_start = (today.replace(day=1) - timedelta(days=30*i)).replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        month_label = month_start.strftime('%b %Y')
+        months.append(month_label)
+        month_sales = sales.filter(timestamp__date__gte=month_start, timestamp__date__lte=month_end).aggregate(total=Sum('quantity'))['total'] or 0
+        sales_data.append(month_sales)
+
     context = {
         'form': form,
         'business': business,
         'product': product,
         'title': 'Edit Product',
+        'product_analytics': {
+            'total_sales': total_sales,
+            'total_revenue': total_revenue,
+            'average_rating': average_rating,
+            'months': months,
+            'sales_data': sales_data,
+        }
     }
     
     return render(request, 'vendor/product_form.html', context)
@@ -310,13 +338,25 @@ def sales_history(request, business_id):
     
     total_revenue = Sale.get_total_revenue(business_id=business.id, period=period)
     total_profit = Sale.get_total_profit(business_id=business.id, period=period)
-    
+
+    # Aggregate sales for chart (group by day or month based on period)
+    if period in ['month', 'week', 'today']:
+        sales_agg = sales.annotate(day=TruncDay('timestamp')).values('day').annotate(total=Sum('quantity')).order_by('day')
+        chart_labels = [s['day'].strftime('%b %d') for s in sales_agg]
+        chart_data = [s['total'] for s in sales_agg]
+    else:
+        sales_agg = sales.annotate(month=TruncMonth('timestamp')).values('month').annotate(total=Sum('quantity')).order_by('month')
+        chart_labels = [s['month'].strftime('%b %Y') for s in sales_agg]
+        chart_data = [s['total'] for s in sales_agg]
+
     context = {
         'business': business,
         'sales': sales,
         'period': period,
         'total_revenue': total_revenue,
         'total_profit': total_profit,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
     }
     
     return render(request, 'vendor/sales_history.html', context)
