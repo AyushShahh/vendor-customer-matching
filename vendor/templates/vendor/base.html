@@ -20,7 +20,6 @@
             </div>
             <div class="profile-actions">
                 <a href="{% url 'accounts:profile' %}" class="profile-btn">View Profile</a>
-                <a href="{% url 'accounts:profile' %}?edit=true" class="profile-btn">Edit Profile</a>
                 <form action="{% url 'accounts:logout' %}" method="post">
                     {% csrf_token %}
                     <a class="logout-btn" style="cursor: pointer;"><button type="submit" style="all: unset">Logout</button></a>

@@ -37,54 +37,30 @@
         <div class="metric-card">
             <h3>Total Businesses</h3>
             <div class="metric-value">{{ total_businesses }}</div>
-            <div class="metric-trend trend-up">
-                <i>↑</i> 5% from previous period
-            </div>
         </div>
         <div class="metric-card">
             <h3>Total Products</h3>
             <div class="metric-value">{{ total_products }}</div>
-            <div class="metric-trend trend-up">
-                <i>↑</i> 12% from previous period
-            </div>
         </div>
         <div class="metric-card">
             <h3>Total Revenue</h3>
             <div class="metric-value">₹{{ total_revenue }}</div>
-            <div class="metric-trend trend-up">
-                <i>↑</i> 8% from previous period
-            </div>
         </div>
         <div class="metric-card">
             <h3>Total Profit</h3>
             <div class="metric-value">₹{{ total_profit }}</div>
-            <div class="metric-trend trend-up">
-                <i>↑</i> 7% from previous period
-            </div>
         </div>
     </div>
     
+    {{ business_data|json_script:"business-data" }}
+    {{ category_data|json_script:"category-data" }}
+    {{ top_products|json_script:"top-products-data" }}
+    
     <div class="chart-grid">
-        <div class="chart-card">
-            <h3>Revenue & Profit Trends</h3>
-            <div class="chart-container">
-                <canvas id="revenueChart" height="300"></canvas>
-            </div>
-        </div>
-        
         <div class="chart-card">
             <h3>Business Performance</h3>
             <div class="chart-container">
                 <canvas id="businessChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <div class="chart-grid">
-        <div class="chart-card">
-            <h3>Top Selling Products</h3>
-            <div class="chart-container">
-                <canvas id="productChart" height="300"></canvas>
             </div>
         </div>
         
@@ -92,6 +68,21 @@
             <h3>Inventory Status</h3>
             <div class="chart-container">
                 <canvas id="inventoryChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>Products by Category</h3>
+            <div class="chart-container">
+                <canvas id="categoryChart" height="300"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>Top Selling Products</h3>
+            <div class="chart-container">
+                <canvas id="topProductsChart" height="300"></canvas>
             </div>
         </div>
     </div>
@@ -119,9 +110,9 @@
                         <td>10</td>
                         <td>
                             {% if product.quantity == 0 %}
-                                <span class="badge badge-danger"><i>⚠️</i> Out of Stock</span>
+                                <span class="badge badge-danger">Out of Stock</span>
                             {% else %}
-                                <span class="badge badge-warning"><i>⚠️</i> Low Stock</span>
+                                <span class="badge badge-warning">Low Stock</span>
                             {% endif %}
                         </td>
                         <td>
@@ -145,79 +136,16 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Revenue & Profit Trends
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        
-        // Sample data - replace with actual data from backend
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const revenueValues = [12500, 15000, 14000, 16500, 17800, 19500, 18900, 20500, 22000, 23500, 25000, 27000];
-        const profitValues = [4000, 5200, 4800, 5600, 6200, 6800, 6300, 7100, 7800, 8200, 9000, 9800];
-        
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [
-                    {
-                        label: 'Revenue',
-                        data: revenueValues,
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Profit',
-                        data: profitValues,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Amount (₹)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value;
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ₹' + context.parsed.y;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Business performance chart
-        const ctx = document.getElementById('businessChart').getContext('2d');
-        const businessData = JSON.parse('{{ business_data|safe|escapejs }}');
-        
-        const labels = businessData.map(item => item.name);
+        // Business Performance Chart using real business_data
+        const businessData = JSON.parse(document.getElementById('business-data').textContent);
+        const businessCtx = document.getElementById('businessChart').getContext('2d');
+        const businessLabels = businessData.map(item => item.name);
         const revenueData = businessData.map(item => item.revenue);
         const profitData = businessData.map(item => item.profit);
-        
-        new Chart(ctx, {
+        new Chart(businessCtx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: businessLabels,
                 datasets: [
                     {
                         label: 'Revenue',
@@ -240,86 +168,27 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Amount (₹)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value;
-                            }
-                        }
+                        title: { display: true, text: 'Amount (₹)' },
+                        ticks: { callback: value => '₹' + value }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Business'
-                        }
-                    }
+                    x: { title: { display: true, text: 'Business' } }
                 },
                 plugins: {
                     tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ₹' + context.parsed.y;
-                            }
-                        }
+                        callbacks: { label: context => context.dataset.label + ': ₹' + context.parsed.y }
                     }
                 }
             }
         });
         
-        // Top selling products chart
-        const productCtx = document.getElementById('productChart').getContext('2d');
-        
-        // Sample data - replace with actual data from backend
-        const productNames = ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'];
-        const productSales = [150, 120, 90, 80, 60];
-        
-        new Chart(productCtx, {
-            type: 'pie',
-            data: {
-                labels: productNames,
-                datasets: [{
-                    data: productSales,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Units Sold'
-                    }
-                }
-            }
-        });
-        
-        // Inventory status chart
+        // Inventory Status Chart
         const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
-        
-        // Sample data - replace with actual data from backend
+        const totalProducts = {{ total_products|default:0 }};
+        const lowStock = {{ low_inventory|default:0 }};
+        const outOfStock = {{ out_of_stock|default:0 }};
+        const inStock = totalProducts - (lowStock + outOfStock);
         const inventoryLabels = ['In Stock', 'Low Stock', 'Out of Stock'];
-        const inventoryValues = [65, 22, 13];
-        
+        const inventoryValues = [inStock, lowStock, outOfStock];
         new Chart(inventoryCtx, {
             type: 'doughnut',
             data: {
@@ -341,15 +210,70 @@
             },
             options: {
                 responsive: true,
+                plugins: { legend: { position: 'right' }, title: { display: true, text: 'Inventory Status' } }
+            }
+        });
+        
+        // Products by Category Chart
+        const categoryData = JSON.parse(document.getElementById('category-data').textContent);
+        const categoryLabels = categoryData.map(item => item['category__name'] || 'Unknown');
+        const categoryValues = categoryData.map(item => item.count);
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryValues,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
                 plugins: {
-                    legend: {
-                        position: 'right',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Inventory Status'
-                    }
+                    legend: { position: 'right' },
+                    title: { display: true, text: 'Products by Category' }
                 }
+            }
+        });
+
+        // Top Selling Products Chart
+        const topProductsData = JSON.parse(document.getElementById('top-products-data').textContent);
+        const topProductsLabels = topProductsData.map(item => item.name);
+        const topProductsValues = topProductsData.map(item => item.total_quantity); // changed from item.sales_count
+        const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+        new Chart(topProductsCtx, {
+            type: 'bar',
+            data: {
+                labels: topProductsLabels,
+                datasets: [{
+                    label: 'Total Quantity Sold',
+                    data: topProductsValues,
+                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Quantity Sold' } } },
+                plugins: { legend: { display: false } }
             }
         });
     });

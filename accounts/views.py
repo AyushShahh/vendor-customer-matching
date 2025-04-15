@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from . models import CustomUser, Customer, Vendor
 from django.http import HttpResponse
+from django.contrib import messages
 
 
 def login_view(request, user_type):
@@ -101,6 +102,28 @@ def profile(request):
     if not request.user.is_authenticated:
         return redirect(reverse('customer:landing_page'))
     return render(request, 'accounts/profile.html')
+
+
+def edit_profile(request):
+    if not request.user.is_authenticated:
+        return redirect(reverse('customer:landing_page'))
+    user = request.user
+    error_message = None
+    if request.method == 'POST':
+        try:
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.last_name = request.POST.get('last_name', user.last_name)
+            user.email = request.POST.get('email', user.email)
+            user.phone_number = request.POST.get('phone_number', user.phone_number)
+            user.area = request.POST.get('area', user.area)
+            user.city = request.POST.get('city', user.city)
+            user.state = request.POST.get('state', user.state)
+            user.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('accounts:profile')
+        except Exception as e:
+            error_message = str(e)
+    return render(request, 'accounts/edit_profile.html', {'error_message': error_message})
 
 
 def logout_view(request):

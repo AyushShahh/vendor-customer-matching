@@ -80,12 +80,11 @@
             <li><a href="{% url 'customer:home_page' %}" class="active"><span>🏠</span> Home</a></li>
             <li><a href="{% url 'customer:search' %}"><span>🔍</span> Search</a></li>
             <li><a href="{% url 'customer:watchlist' %}"><span>⭐</span> Watchlist</a></li>
-            <li><a href="{% url 'accounts:profile' %}"><span>👤</span> View Profile</a></li>
             <li>
-            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit"><span>🚪</span> Logout</button>
-            </form>
+                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><span>🚪</span> Logout</a>
+                <form id="logout-form" action="{% url 'accounts:logout' %}" method="post" style="display:none;">
+                    {% csrf_token %}
+                </form>
             </li>
         </ul>
     </div>
@@ -101,7 +100,7 @@
                             <a href="{% url 'customer:product_detail' product.id %}">
                                 <div class="product-info">
                                     <h3>{{ product.name }}</h3>
-                                    <p class="price-rating">${{ product.selling_price }} | Rating: {{ product.average_rating|default:"No ratings" }}</p>
+                                    <p class="price-rating">₹{{ product.selling_price }} | Rating: {{ product.average_rating|floatformat:1|default:"No ratings" }} ({{ product.review_count|default:0 }})</p>
                                     <p>Shop: {{ product.business.name }}</p>
                                 </div>
                             </a>
@@ -122,7 +121,7 @@
                             <a href="{% url 'customer:product_detail' product.id %}">
                                 <div class="product-info">
                                     <h3>{{ product.name }}</h3>
-                                    <p class="price-rating">${{ product.selling_price }} | Rating: {{ product.average_rating|default:"No ratings" }}</p>
+                                    <p class="price-rating">₹{{ product.selling_price }} | Rating: {{ product.average_rating|floatformat:1|default:"No ratings" }} ({{ product.review_count|default:0 }})</p>
                                     <p>Shop: {{ product.business.name }}</p>
                                 </div>
                             </a>

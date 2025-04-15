@@ -9,6 +9,7 @@ from product.models import Product, ProductRating, ProductReview, ProductCategor
 from business.models import Business
 from .models import Watchlist
 from accounts.models import Customer
+from difflib import SequenceMatcher
 
 
 def landing_view(request):
@@ -41,10 +42,15 @@ def home_page(request):
         average_rating__isnull=False
     ).order_by('-average_rating')[:8]
     
-    # Add average rating to popular products
+    # Add average rating and review count to popular and highly rated products
     for product in popular_products:
         ratings = ProductRating.objects.filter(product=product)
         product.average_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+        product.review_count = ratings.count()
+    for product in highly_rated_products:
+        ratings = ProductRating.objects.filter(product=product)
+        product.average_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+        product.review_count = ratings.count()
     
     context = {
         'popular_products': popular_products,
@@ -82,11 +88,31 @@ def search_view(request):
     
     # Apply filters if provided
     if query:
-        products = products.filter(
+        # First, filter with icontains for performance
+        filtered = products.filter(
             Q(name__icontains=query) | 
             Q(description__icontains=query) |
             Q(business__name__icontains=query)
         )
+        # Fuzzy match fallback if nothing found or to improve results
+        if not filtered.exists():
+            all_products = list(products)
+            scored = []
+            for product in all_products:
+                name_score = SequenceMatcher(None, query.lower(), product.name.lower()).ratio()
+                desc_score = SequenceMatcher(None, query.lower(), product.description.lower()).ratio()
+                business_score = SequenceMatcher(None, query.lower(), product.business.name.lower()).ratio()
+                max_score = max(name_score, desc_score, business_score)
+                if max_score > 0.5:
+                    scored.append((max_score, product))
+            scored.sort(reverse=True)
+            filtered_products = [p for score, p in scored]
+            # Convert list of products to a QuerySet
+            if filtered_products:
+                filtered = Product.objects.filter(id__in=[p.id for p in filtered_products])
+            else:
+                filtered = Product.objects.none()
+        products = filtered
     
     if category_id:
         products = products.filter(category_id=category_id)
@@ -107,6 +133,10 @@ def search_view(request):
     if min_rating:
         products = products.filter(average_rating__gte=float(min_rating))
     
+    # Add review count for each product
+    for product in products:
+        product.review_count = ProductRating.objects.filter(product=product).count()
+    
     context = {
         'products': products,
         'categories': categories,
@@ -123,22 +153,23 @@ def product_detail(request, product_id):
     
     product = get_object_or_404(Product, id=product_id)
     
-    # Get average rating for this product
+    # Get average rating and review count for this product
     ratings = ProductRating.objects.filter(product=product)
     product.average_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+    product.review_count = ratings.count()
     
-    # Check if product is in user's watchlist
-    customer = get_object_or_404(Customer, id=request.user.id)
+    # Get the Customer instance from the logged-in user
+    customer = request.user.customer
     is_in_watchlist = Watchlist.objects.filter(user=customer, product=product).exists()
     
-    # Get all reviews for this product with ratings
-    reviews = ProductReview.objects.filter(product=product)
+    # Get all reviews for this product with ratings and user info
+    reviews = ProductReview.objects.filter(product=product).select_related('user')
     for review in reviews:
         try:
             review.rating = ProductRating.objects.get(user=review.user, product=product).rating
         except ProductRating.DoesNotExist:
             review.rating = None
-            
+    
     # Check if user has already reviewed the product
     user_reviewed = ProductReview.objects.filter(user=customer, product=product).exists()
     
@@ -159,9 +190,7 @@ def add_to_watchlist(request, product_id):
     
     if request.method == 'POST':
         product = get_object_or_404(Product, id=product_id)
-        customer = get_object_or_404(Customer, id=request.user.id)
-        
-        # Check if product is already in watchlist
+        customer = request.user.customer
         if not Watchlist.objects.filter(user=customer, product=product).exists():
             Watchlist.objects.create(user=customer, product=product)
             messages.success(request, f"{product.name} added to your watchlist!")
@@ -178,9 +207,7 @@ def remove_from_watchlist(request, product_id):
     
     if request.method == 'POST':
         product = get_object_or_404(Product, id=product_id)
-        customer = get_object_or_404(Customer, id=request.user.id)
-        
-        # Find and delete watchlist entry
+        customer = request.user.customer
         try:
             watchlist_item = Watchlist.objects.get(user=customer, product=product)
             watchlist_item.delete()
@@ -188,11 +215,11 @@ def remove_from_watchlist(request, product_id):
         except Watchlist.DoesNotExist:
             messages.error(request, "This product wasn't in your watchlist.")
     
-    # If we came from the watchlist page and that's the only item, go back to watchlist
-    if 'watchlist' in request.META.get('HTTP_REFERER', ''):
-        return redirect(reverse('customer:watchlist'))
-        
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('customer:product_detail', args=[product_id])))
+    # Determine a safe redirect URL.
+    redirect_url = request.META.get('HTTP_REFERER')
+    if not redirect_url or 'watchlist' in redirect_url:
+        redirect_url = reverse('customer:watchlist')
+    return HttpResponseRedirect(redirect_url)
 
 
 @login_required
@@ -200,13 +227,14 @@ def watchlist_view(request):
     if request.user.user_type != 'customer':
         return redirect(reverse("vendor:index"))
     
-    customer = get_object_or_404(Customer, id=request.user.id)
+    customer = request.user.customer
     watchlist_items = Watchlist.objects.filter(user=customer)
     
-    # Add average rating to each product
+    # Add average rating and review count to each product
     for item in watchlist_items:
         ratings = ProductRating.objects.filter(product=item.product)
         item.product.average_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+        item.product.review_count = ratings.count()
     
     context = {
         'watchlist_items': watchlist_items
@@ -222,7 +250,7 @@ def add_review(request, product_id):
     
     if request.method == 'POST':
         product = get_object_or_404(Product, id=product_id)
-        customer = get_object_or_404(Customer, id=request.user.id)
+        customer = request.user.customer
         rating_value = int(request.POST.get('rating', 0))
         review_text = request.POST.get('review', '').strip()
         

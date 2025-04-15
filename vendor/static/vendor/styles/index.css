@@ -306,6 +306,11 @@ h1 {
     flex-wrap: wrap;
 }
 
+.act-btn {
+    height: 35px;
+    position: relative;
+}
+
 /* Form styles */
 .form {
     max-width: 800px;

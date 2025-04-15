@@ -324,34 +324,49 @@ def sales_history(request, business_id):
 
 @vendor_required
 def analytics(request):
-    """View analytics across all businesses"""
+    """View analytics across all businesses using real data."""
     vendor = request.user.vendor
     businesses = Business.objects.filter(vendor=vendor)
     
-    # Filter by time period if provided
     period = request.GET.get('period', 'month')
     
-    # Overall stats
     total_businesses = businesses.count()
     total_products = Product.objects.filter(business__vendor=vendor).count()
     low_inventory = Product.objects.filter(business__vendor=vendor, quantity__lt=10, quantity__gt=0).count()
     out_of_stock = Product.objects.filter(business__vendor=vendor, quantity=0).count()
     
-    # Sales stats
     total_revenue = Sale.get_total_revenue(period=period)
     total_profit = Sale.get_total_profit(period=period)
     
-    # Per-business data for charts
     business_data = []
     for business in businesses:
         business_revenue = Sale.get_total_revenue(business_id=business.id, period=period)
         business_profit = Sale.get_total_profit(business_id=business.id, period=period)
-        
         business_data.append({
             'name': business.name,
             'revenue': business_revenue,
             'profit': business_profit,
         })
+    if not business_data:
+        business_data = [{'name': 'No Data', 'revenue': 0, 'profit': 0}]
+    
+    low_stock_products = Product.objects.filter(business__vendor=vendor, quantity__lt=10, quantity__gt=0)
+    
+    from datetime import timedelta
+    from django.utils import timezone
+    date_filter = Q()
+    if period == 'today':
+        date_filter = Q(sales__timestamp__date=timezone.now().date())
+    elif period == 'week':
+        date_filter = Q(sales__timestamp__date__gte=timezone.now().date() - timedelta(days=7))
+    elif period == 'month':
+        date_filter = Q(sales__timestamp__date__gte=timezone.now().date() - timedelta(days=30))
+    
+    top_products = list(Product.objects.filter(business__vendor=vendor)
+                         .filter(date_filter)
+                         .annotate(total_quantity=Sum('sales__quantity'))
+                         .order_by('-total_quantity')[:5]
+                         .values('name', 'total_quantity'))
     
     context = {
         'total_businesses': total_businesses,
@@ -361,6 +376,11 @@ def analytics(request):
         'total_revenue': total_revenue,
         'total_profit': total_profit,
         'business_data': business_data,
+        'low_stock_products': low_stock_products,
+        'category_data': list(Product.objects.filter(business__vendor=vendor)
+                               .values('category__name')
+                               .annotate(count=Count('id'))),
+        'top_products': top_products,
         'period': period,
     }
     
