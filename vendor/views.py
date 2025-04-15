@@ -189,7 +189,7 @@ def product_create(request, business_id):
     business = get_object_or_404(Business, id=business_id, vendor=vendor)
     
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
             product.business = business
@@ -216,7 +216,7 @@ def product_edit(request, business_id, product_id):
     product = get_object_or_404(Product, id=product_id, business=business)
     
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
             messages.success(request, f"Product '{product.name}' updated successfully.")

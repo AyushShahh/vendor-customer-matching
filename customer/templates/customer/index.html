@@ -98,6 +98,11 @@
                     {% for product in popular_products %}
                         <div class="product-card">
                             <a href="{% url 'customer:product_detail' product.id %}">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100%;height:180px;object-fit:cover;">
+                                {% else %}
+                                    <img src="{% static 'customer/images/no-image.png' %}" alt="No image" style="width:100%;height:180px;object-fit:cover;">
+                                {% endif %}
                                 <div class="product-info">
                                     <h3>{{ product.name }}</h3>
                                     <p class="price-rating">₹{{ product.selling_price }} | Rating: {{ product.average_rating|floatformat:1|default:"No ratings" }} ({{ product.review_count|default:0 }})</p>
@@ -119,6 +124,11 @@
                     {% for product in highly_rated_products %}
                         <div class="product-card">
                             <a href="{% url 'customer:product_detail' product.id %}">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100%;height:180px;object-fit:cover;">
+                                {% else %}
+                                    <img src="{% static 'customer/images/no-image.png' %}" alt="No image" style="width:100%;height:180px;object-fit:cover;">
+                                {% endif %}
                                 <div class="product-info">
                                     <h3>{{ product.name }}</h3>
                                     <p class="price-rating">₹{{ product.selling_price }} | Rating: {{ product.average_rating|floatformat:1|default:"No ratings" }} ({{ product.review_count|default:0 }})</p>

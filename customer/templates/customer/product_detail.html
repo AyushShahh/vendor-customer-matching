@@ -260,6 +260,11 @@
         
         <div class="product-detail-container">
             <div class="product-detail-header">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100%;max-width:350px;max-height:250px;object-fit:cover;margin-bottom:1.5rem;">
+                {% else %}
+                    <img src="{% static 'customer/images/no-image.png' %}" alt="No image" style="width:100%;max-width:350px;max-height:250px;object-fit:cover;margin-bottom:1.5rem;">
+                {% endif %}
                 <div class="product-info-container">
                     <h1>{{ product.name }}</h1>
                     <p class="product-price">₹{{ product.selling_price }}</p>

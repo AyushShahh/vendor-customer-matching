@@ -17,7 +17,7 @@
 <h1>{{ title }}</h1>
 
 <div class="section">
-    <form method="post" class="form">
+    <form method="post" enctype="multipart/form-data" class="form">
         {% csrf_token %}
         
         <div class="form-group">
@@ -70,6 +70,14 @@
                     <div class="error">{{ form.category.errors }}</div>
                 {% endif %}
             </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.image.id_for_label }}">Product Image:</label>
+            {{ form.image }}
+            {% if form.image.errors %}
+                <div class="error">{{ form.image.errors }}</div>
+            {% endif %}
         </div>
         
         <div class="form-actions">
