@@ -27,7 +27,7 @@ class ProductRating(models.Model):
             raise ValueError('Rating must be between 1 and 10')
 
     def __str__(self):
-        return f"{self.user.first_name} rated {self.product.name} {self.rating}"
+        return f"{self.user.user.first_name} rated {self.product.name} {self.rating}"
 
 
 class ProductReview(models.Model):
@@ -36,7 +36,7 @@ class ProductReview(models.Model):
     review = models.CharField(max_length=250, null=False, blank=False)
 
     def __str__(self):
-        return f"{self.user.first_name}'s review on {self.product.name}"
+        return f"{self.user.user.first_name}'s review on {self.product.name}"
 
 
 class ProductCategory(models.Model):
