@@ -105,18 +105,18 @@
         {% if product_analytics.average_rating %}
         <div class="stat-card">
             <h3>Average Rating</h3>
-            <p>{{ product_analytics.average_rating|default:"0"|floatformat:1 }}/5</p>
+            <p>{{ product_analytics.average_rating }}/5</p>
             <div class="stars-container">
                 {% for i in "12345" %}
-                    {% if forloop.counter <= product_analytics.average_rating|default:0|floatformat:0 %}
+                    {% if forloop.counter <= product_analytics.average_rating %}
                         <span class="star filled">★</span>
                     {% else %}
-                        <span class="star">★</span>
+                        <span class="star">☆</span>
                     {% endif %}
                 {% endfor %}
             </div>
             <small>
-                <a href="{% url 'vendor:product_list' business.id %}" class="btn btn-sm btn-secondary">View Reviews</a>
+                <a href="{% url 'vendor:product_reviews' business.id product.id%}" class="btn btn-sm btn-secondary">View Reviews</a>
             </small>
         </div>
         {% endif %}

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ product.name }} - Details</title>
     <link href="{% static 'customer/styles/index.css' %}" rel="stylesheet">
-    <script defer src="{% static 'customer/js/product_detail.js' %}"></script>
     <style>
         .back-button {
             margin-bottom: 1rem;
@@ -318,10 +317,6 @@
                     <div class="business-info-item">
                         <span class="label">Contact:</span>
                         <span class="value">{{ product.business.phone_number }}</span>
-                    </div>
-                    <div class="business-info-item">
-                        <span class="label">Rating:</span>
-                        <span class="value">{{ product.business.average_rating|default:"No ratings yet" }}</span>
                     </div>
                 </div>
             </div>

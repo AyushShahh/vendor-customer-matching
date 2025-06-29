@@ -3,10 +3,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Sum, F, Q, Avg
-from django.http import JsonResponse
-from accounts.models import Vendor
-from business.models import Business, BusinessCategory
-from product.models import Product, ProductCategory
+from business.models import Business
+from product.models import Product, ProductRating, ProductReview
 from .models import Sale
 from .forms import BusinessForm, ProductForm, SaleForm
 from django.db.models.functions import TruncDay, TruncMonth
@@ -107,19 +105,13 @@ def business_detail(request, business_id):
     total_sales = Sale.get_total_revenue(business_id=business.id, period='month')
     total_profit = Sale.get_total_profit(business_id=business.id, period='month')
     
-    # Get customer ratings and reviews
-    average_rating = business.ratings.aggregate(avg_rating=Sum('rating') / Count('rating'))['avg_rating'] if business.ratings.exists() else 0
-    recent_reviews = business.reviews.order_by('-id')[:5]
-    
     context = {
         'business': business,
         'total_products': total_products,
         'low_inventory': low_inventory,
         'out_of_stock': out_of_stock,
         'total_sales': total_sales,
-        'total_profit': total_profit,
-        'average_rating': average_rating,
-        'recent_reviews': recent_reviews,
+        'total_profit': total_profit
     }
     
     return render(request, 'vendor/business_detail.html', context)
@@ -425,3 +417,22 @@ def analytics(request):
     }
     
     return render(request, 'vendor/analytics.html', context)
+
+@vendor_required
+def product_reviews(request, business_id, product_id):
+    """View reviews for a specific product"""
+    vendor = request.user.vendor
+    business = get_object_or_404(Business, id=business_id, vendor=vendor)
+    product = get_object_or_404(Product, id=product_id, business=business)
+    ratings = ProductRating.objects.filter(product=product)
+    average_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+    reviews = [(rating.rating, ProductReview.objects.filter(product=product, user=rating.user).first()) for rating in ratings]
+    context = {
+        'business': business,
+        'product': product,
+        'reviews': ProductReview.objects.filter(product=product),
+        'average_rating': average_rating,
+        'reviews': reviews
+    }
+    
+    return render(request, 'vendor/product_reviews.html', context)

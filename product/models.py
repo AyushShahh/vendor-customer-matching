@@ -23,7 +23,7 @@ class ProductRating(models.Model):
     rating = models.IntegerField(blank=False, null=False)
 
     def clean(self):
-        if not (1 <= self.rating <= 10):
+        if not (1 <= self.rating <= 5):
             raise ValueError('Rating must be between 1 and 10')
 
     def __str__(self):

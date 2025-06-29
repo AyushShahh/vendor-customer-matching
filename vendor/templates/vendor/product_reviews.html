@@ -20,54 +20,35 @@
     <div class="product-reviews">
         <div class="review-summary">
             <div class="average-rating">
-                <div class="big-rating">{{ product.average_rating|default:"0"|floatformat:1 }}</div>
+                <div class="big-rating">{{ average_rating }}</div>
                 <div class="stars-container">
                     {% for i in "12345" %}
-                        {% if forloop.counter <= product.average_rating|default:0|floatformat:0 %}
+                        {% if forloop.counter <= average_rating %}
                             <span class="star filled">★</span>
                         {% else %}
-                            <span class="star">★</span>
+                            <span class="star">☆</span>
                         {% endif %}
                     {% endfor %}
                 </div>
-                <div class="rating-count">Based on {{ product.reviews.count }} reviews</div>
-            </div>
-            
-            <div class="rating-distribution">
-                {% for i in "54321" %}
-                    <div class="rating-bar">
-                        <div class="rating-label">{{ i }} ★</div>
-                        <div class="rating-progress">
-                            {% with rating_percentage=product.rating_percentages|get_item:i|default:0 %}
-                            <div class="rating-progress-fill" style="width: {{ rating_percentage }}%"></div>
-                            {% endwith %}
-                        </div>
-                        <div class="rating-percentage">
-                            {% with rating_percentage=product.rating_percentages|get_item:i|default:0 %}
-                            {{ rating_percentage }}%
-                            {% endwith %}
-                        </div>
-                    </div>
-                {% endfor %}
+                <div class="rating-count">Based on {{ product.ratings.count }} reviews</div>
             </div>
         </div>
         
-        {% if product.reviews %}
+        {% if reviews %}
         <div class="review-list">
-            {% for review in product.reviews %}
+            {% for review in reviews %}
                 <div class="review-item">
                     <div class="rating">
                         {% for i in "12345" %}
-                            {% if forloop.counter <= review.rating %}
+                            {% if forloop.counter <= review.0 %}
                                 <span class="star filled">★</span>
                             {% else %}
-                                <span class="star">★</span>
+                                <span class="star">☆</span>
                             {% endif %}
                         {% endfor %}
+                    </div><br>
+                    <p>{{ review.1.review }}</p>
                     </div>
-                    <p>{{ review.review_text }}</p>
-                    <p class="meta">- {{ review.user.first_name }} {{ review.user.last_name|first }}. on {{ review.created_at|date:"M d, Y" }}</p>
-                </div>
             {% endfor %}
         </div>
         {% else %}
